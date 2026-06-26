@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sentence Order — 영어 문장 순서배열</title>
+<style>
+  :root{
+    --ink:#1a2520;
+    --paper:#f4f0e6;
+    --paper-2:#ece5d4;
+    --line:#cdc3a9;
+    --accent:#136b4d;
+    --accent-soft:#d9ece2;
+    --wrong:#b0392c;
+    --wrong-soft:#f1dbd5;
+    --muted:#6c6450;
+    --gold:#b3801f;
+    --radius:3px;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+    --sans:"Inter","Helvetica Neue",Arial,sans-serif;
+    --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.5;
+    -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
+    background-image:
+      radial-gradient(circle at 12% 18%, rgba(0,0,0,.016) 0 1px, transparent 1px),
+      radial-gradient(circle at 78% 62%, rgba(0,0,0,.016) 0 1px, transparent 1px);
+    background-size:7px 7px, 9px 9px;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:26px 18px 96px}
+
+  header.mast{
+    border-bottom:2px solid var(--ink);padding-bottom:13px;
+    display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  }
+  .mast-l{display:flex;flex-direction:column;gap:3px}
+  .eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--muted)}
+  h1{font-family:var(--serif);font-weight:600;font-size:33px;line-height:1;letter-spacing:-.01em}
+  h1 em{font-style:italic;color:var(--accent)}
+  .streak{
+    font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;
+    border:1px solid var(--line);border-radius:var(--radius);padding:6px 11px;background:var(--paper-2);line-height:1.35;
+  }
+  .streak b{color:var(--gold);font-size:16px;display:block}
+
+  /* progress overview */
+  .progress{margin-top:20px;border:1px solid var(--line);border-radius:var(--radius);background:#fbf9f2;padding:15px 15px 16px}
+  .prog-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:11px}
+  .prog-label{font-family:var(--mono);font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+  .prog-stat{font-family:var(--serif);font-size:15px}
+  .prog-stat b{font-size:25px;color:var(--accent);font-weight:600}
+  .prog-stat .pct{font-family:var(--mono);font-size:12px;color:var(--muted);margin-left:6px;letter-spacing:.04em}
+  .bar{height:7px;background:var(--paper-2);border:1px solid var(--line);border-radius:99px;overflow:hidden}
+  .bar-fill{height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:6px;margin-top:15px}
+  .cell{
+    font-family:var(--mono);font-size:11px;letter-spacing:.01em;
+    border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);
+    padding:8px 3px;text-align:center;cursor:pointer;color:var(--muted);
+    transition:border-color .15s,background .2s,color .15s,transform .1s;position:relative;
+  }
+  .cell:hover{border-color:var(--accent);color:var(--ink);transform:translateY(-1px)}
+  .cell:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+  .cell.done{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+  .cell.done::after{content:"✓";position:absolute;top:2px;right:4px;font-size:9px;color:var(--accent)}
+  .cell.active{box-shadow:0 0 0 2px var(--gold);border-color:var(--gold)}
+
+  .prog-actions{display:flex;justify-content:flex-end;margin-top:13px}
+  .reset-btn{
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+    background:none;border:1px solid var(--line);border-radius:var(--radius);color:var(--muted);
+    padding:6px 11px;cursor:pointer;transition:border-color .15s,color .15s;
+  }
+  .reset-btn:hover{border-color:var(--wrong);color:var(--wrong)}
+  .reset-btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+  .meta-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:26px 0 14px}
+  .pick{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  select{
+    font-family:var(--sans);font-size:15px;color:var(--ink);background:#fbf9f2;
+    border:1px solid var(--line);border-radius:var(--radius);padding:9px 30px 9px 11px;cursor:pointer;
+    appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%236c6450'/></svg>");
+    background-repeat:no-repeat;background-position:right 11px center;min-width:150px;
+  }
+  select:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+  .counter{font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .counter b{color:var(--ink)}
+  .done-tag{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--accent);text-transform:uppercase;margin-left:8px}
+
+  .board{border:1px solid var(--line);border-radius:var(--radius);background:#fbf9f2;padding:15px}
+  .board-head{
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:9px;
+  }
+  .board-head::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  ol.slots{list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:8px}
+  li.slot{
+    counter-increment:s;display:flex;align-items:stretch;
+    border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);
+    cursor:grab;transition:border-color .15s,box-shadow .15s,background .2s;user-select:none;
+  }
+  li.slot:active{cursor:grabbing}
+  li.slot.dragging{opacity:.35}
+  li.slot.over{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+  li.slot .num{
+    font-family:var(--mono);font-size:12px;color:var(--muted);
+    display:flex;align-items:center;justify-content:center;width:32px;flex-shrink:0;
+    border-right:1px solid var(--line);background:var(--paper-2);
+  }
+  li.slot .num::before{content:counter(s,decimal-leading-zero)}
+  li.slot .txt{font-family:var(--serif);font-size:16.5px;line-height:1.45;padding:11px 12px;flex:1}
+  li.slot .grip{display:flex;align-items:center;color:var(--line);padding:0 10px;flex-shrink:0;font-size:14px}
+  li.slot.correct{background:var(--accent-soft);border-color:var(--accent)}
+  li.slot.correct .num{background:var(--accent);color:#fff;border-right-color:var(--accent)}
+  li.slot.wrong{background:var(--wrong-soft);border-color:var(--wrong)}
+  li.slot.wrong .num{background:var(--wrong);color:#fff;border-right-color:var(--wrong)}
+
+  .ctrl{display:flex;gap:9px;margin-top:18px;flex-wrap:wrap;align-items:center}
+  button.btn{
+    font-family:var(--mono);font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;
+    padding:11px 17px;border-radius:var(--radius);cursor:pointer;border:1px solid var(--ink);
+    background:var(--ink);color:var(--paper);transition:transform .1s,opacity .15s;
+  }
+  button.btn:hover{transform:translateY(-1px)}
+  button.btn:active{transform:translateY(0)}
+  button.btn.ghost{background:none;color:var(--ink)}
+  button.btn.ghost:hover{background:var(--paper-2)}
+  button.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+  button.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  .verdict{font-family:var(--serif);font-size:18px;font-style:italic;margin-left:auto;opacity:0;transition:opacity .3s}
+  .verdict.show{opacity:1}
+  .verdict.good{color:var(--accent)}
+  .verdict.bad{color:var(--wrong)}
+
+  .hintbar{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:13px;letter-spacing:.03em}
+
+  footer{
+    margin-top:38px;padding-top:13px;border-top:1px solid var(--line);
+    font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.07em;
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;
+  }
+
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:11.5px;
+    letter-spacing:.05em;padding:11px 18px;border-radius:var(--radius);opacity:0;
+    transition:opacity .25s,transform .25s;pointer-events:none;z-index:50;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @media(max-width:520px){
+    h1{font-size:27px}
+    li.slot .txt{font-size:15px}
+    .verdict{width:100%;margin:8px 0 0;text-align:center}
+    .grid{grid-template-columns:repeat(auto-fill,minmax(52px,1fr))}
+  }
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="mast">
+    <div class="mast-l">
+      <span class="eyebrow">Reorder · Repeat · Retain</span>
+      <h1>Sentence <em>Order</em></h1>
+    </div>
+    <div class="streak" title="연속 정답">연속<b id="streak">0</b></div>
+  </header>
+
+  <!-- PROGRESS -->
+  <section class="progress">
+    <div class="prog-top">
+      <span class="prog-label">진도율 · Progress</span>
+      <span class="prog-stat"><b id="done-n">0</b>/<span id="total-n">0</span><span class="pct" id="pct">0%</span></span>
+    </div>
+    <div class="bar"><div class="bar-fill" id="bar"></div></div>
+    <div class="grid" id="grid"></div>
+    <div class="prog-actions">
+      <button class="reset-btn" id="reset">진도 초기화</button>
+    </div>
+  </section>
+
+  <div class="meta-row">
+    <div class="pick">
+      <span class="lbl">지문</span>
+      <select id="psel"></select>
+      <span class="done-tag" id="done-tag" style="display:none">완료됨 ✓</span>
+    </div>
+    <span class="counter" id="pmeta"></span>
+  </div>
+
+  <div class="board">
+    <div class="board-head">문장을 끌어 올바른 순서로</div>
+    <ol class="slots" id="slots"></ol>
+  </div>
+
+  <div class="ctrl">
+    <button class="btn" id="check">정답 확인</button>
+    <button class="btn ghost" id="shuffle">다시 섞기</button>
+    <button class="btn ghost" id="next">안 푼 지문 ⟳</button>
+    <span class="verdict" id="verdict"></span>
+  </div>
+  <div class="hintbar" id="hintbar">맞히면 완료로 기록되고, 잠시 후 아직 안 푼 지문이 나옵니다.</div>
+
+  <footer>
+    <span>진도는 이 브라우저에 저장됩니다</span>
+    <span>드래그하여 순서 맞추기</span>
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+  var PASSAGES = [{"id":"18-1","title":"18-1","sentences":["There are estimated to be more than 160,000 farms spread across Northern Ireland and the Republic of Ireland combined.","On all of those farms, you will find barns, and in some of those barns, you might be fortunate enough to stumble across a classic tractor like the Massey Ferguson 35.","Production of the Massey Ferguson 35 in the UK and the USA stopped in 1964.","If you were to strike up a conversation with a farmer who still owns one, she might well give the chassis of her Massey Ferguson 35 an affectionate tap and nostalgically remark, ‘They don’t make ’em like that anymore.","The fact that the tractor has survived at least fifty-eight years seems to provide evidence of its superior build quality.","But wait — how long did the other 388,381 Massey Ferguson 35 tractors produced between 1956 and 1964 last before they went for scrap?","Rather than build quality, it might well be the fondness that people in Ireland have for the little red tractor (Harry Ferguson, who developed it, was born in Ireland) that has led farmers there to hold on to their Massey Fergusons and take care of them as well as they have."]},{"id":"18-2","title":"18-2","sentences":["During crises that present immediate danger (e.g., natural disasters, acts of violence or terrorism, transportation crises), people seek trusted and verified sources to ease their immediate concerns, thus turning to traditional sources such as television and radio.","For other crisis types, such as public health and political crises, however, people are more likely to turn to social media where they can seek multiple voices and a variety of expert opinions, as, unlike the first set of crises, public health and political crises may be more subjective and less straightforward, and thus necessitate a deeper dive into supplementary information and evidence.","In addition to the type of crisis at hand, Liu, a communication scholar, and colleagues argued that traditional and social media have different effects on different audiences regarding the motivation to follow instructions and recommended behaviors during crises.","For example, although younger audiences seem to favor social media to traditional media sources during times of crisis, older audiences indicate a preference for traditional media.","Thus, both traditional and social media play a prominent role in delivering important scientific information to the public during crises."]},{"id":"18-3","title":"18-3","sentences":["Focal points are the little things that make a big difference — the difference between reaching one equilibrium and reaching another.","If a local soccer team comes to practice near the playground of the park every Saturday morning or a group of stayat-home parents arranges a regular trip at 3 P.M. on a Wednesday afternoon, that can create a focal point around which others coordinate.","With the team at practice, the park will feel safe from muggers and there will be something to look at, so families will come along to use the park.","Other families will come because the first families will be there; after the soccer season is over and the team no longer comes to practice, Saturday mornings can still be lively at the playground simply because everybody expects that they will be.","A lively park playground can be created by a soccer practice that doesn’t even take place any longer: That is an indication of how whimsically unpredictable these multiple equilibria can be.","Yet while the outcome is whimsical, the causes are rational"]},{"id":"18-4","title":"18-4","sentences":["As the set of cultural norms and categories taken for granted at any particular time, the present is normally more or less invisible to those who participate in it.","It is the unthought background of their thought and action, like water to a fish, or air to a dove.","In films, this background can sometimes become visible as a bygone present in a film that is not just historically but culturally dated.","In the culturally dated film, attitudes and ways of behaving that have altered over time and which now appear as quaint, strange, ‘incorrect’ or problematic, are taken for granted by the characters in the film, and go unquestioned or are even happily endorsed in the film’s narrative.","The present is also visible in contemporary historical dramas that ‘read the past in terms of the present’, anachronistically importing modern attitudes into the past they portray.","This is something that is doubly evident in dated historical films that read the past in terms of their present, where the anachronisms are themselves reflective of a bygone present."]},{"id":"21-1","title":"21-1","sentences":["Perhaps nothing has revolutionized the study of human-environment interactions more than the development of spatially explicit methods for collecting and analyzing data.","Just a few decades ago, most natural and social scientists collected their data without precise spatial referents.","References were made to watersheds, to communities, to villages, to cities, to proximity to rivers, and so on.","In some cases (in anthropology mostly), there was even the custom of changing the name of the community and even its location, “to protect the informants.","While confidentiality remains an important concern when working with human subjects, the extreme to which this was done was largely unjustified.","Everyone knew more or less where these studied communities were, and anyone interested could have found out.","Be that as it may, there was very little interest, except in geography, to precisely locate a study area on a map with coordinates.","Geography persisted, and finally convinced the rest of us, that place was fundamentally important to understand human-environment dynamics."]},{"id":"21-2","title":"21-2","sentences":["The idea that our senses may be deceiving us was taken up by the French philosopher and mathematician René Descartes.","He realized that sometimes our senses give us a false impression — a straight stick in a glass of water appears to be bent, for example.","And if we know that they can be unreliable, it would be wrong to trust them completely — everything that we experience with our senses might be false.","It might even be that we are asleep, and that the world we are experiencing is no more than a dream, or that God or some mischievous power is making us believe things that are not really true.","If that is the case, though, we can never know anything for sure.","But Descartes then showed that there was one thing he could be sure of: In order to be deceived, he must exist, and exist as a thing that thinks.","So, although his senses could not be trusted, he could be sure he existed as something that was capable of thinking and reasoning."]},{"id":"21-3","title":"21-3","sentences":["Hunters in the Ache tribe, living in the Paraguayan jungle, have a lot of ups and downs in their success at the hunt.","Some days they bring home much more food than they could possibly eat; other days they come home empty-handed.","If a man caught a wild pig and hoarded it for himself and his family, much of it would go to waste (there are no deepfreeze refrigerators in the Paraguayan jungle).","During unlucky periods, individual hunters and their families would starve.","Instead of living by a philosophy of “rugged individualism,” however, hunters who have a lucky day share their meat with other families.","And they don’t just share a little; they share a lot — fully 90%.","In exchange for this generosity, their neighbors share with them on days when the luck runs the other way.By exchanging resources, particularly those that are unpredictable and uncertain (like meat from the hunt, as opposed to vegetable crops), the group provides a mutual insurance policy against starvation."]},{"id":"22-1","title":"22-1","sentences":["Connectivity, the capacity of a landscape to support movement by any given species across the landscape, is of increasing concern for conservation biologists.","As the connectivity of a landscape increases from the human perspective (generally through increases in road networks), connectivity decreases for many other species.","Although we may see many species of animals moving across human landscapes (e.g. deer, wolves, and turtles crossing roads or wandering through our backyards), landscapes substantially altered for human use act as barriers to movement of both animal and plant species.","In some cases, these barriers are incomplete — many turtles die on roads, but some make it across.","In other cases, passage is essentially impossible — cities along landscape corridors such as river valleys can effectively eliminate genetic exchange between previously connected plant and animal populations; dams can permanently halt spawning of fish by blocking travel to their breeding grounds.","Thus, lack of connectivity can decrease the conservation value of remaining habitat below what its mapped area might suggest, increasing the impact of fragmentation."]},{"id":"22-2","title":"22-2","sentences":["By enhancing energy efficiency and putting waste products to use, biopower helps move utilities and industries in a sustainable direction.","The U.S. forest products industry now obtains half its energy by combusting woody waste and liquid waste from pulp mill processing.","Biopower helps alleviate climate change as well by reducing carbon dioxide emissions, and capturing landfill gas reduces emissions of methane, a potent greenhouse gas.","Biopower also benefits human health as it cuts down on pollution; by replacing coal in co-firing and direct combustion, biopower reduces emissions of sulfur dioxide because plant matter, unlike coal, contains no appreciable sulfur content.","When plant matter is burned for power, soil is deprived of nutrients and organic matter it would have gained from the plant matter’s decomposition.","In addition, biomass resources tend to be geographically spread out, so using them can help support rural economies and reduce many nations’ dependence on imported fuels."]},{"id":"22-3","title":"22-3","sentences":["One example of human interventions modifying the character of savannas is through their effects on savanna-dwelling mammals such as elephants.","They are what is known as a ‘keystone species’ because they have a strong effect on many aspects of the environment in which they live.","They diversify the ecosystems which they occupy and create a mosaic of habitats by browsing, trampling, and knocking over bushes and trees.","They also spread seeds through their eating and defecating habits and maintain or create water holes by wallowing.","All these roles are beneficial to other species.","Conversely, where human interference prevents elephants from moving freely within their habitats and leads to their numbers exceeding the carrying capacity of the savanna, their effect can be environmentally disastrous.","Equally, if humans reduce elephant numbers in a particular piece of savanna, the savanna may become less diverse and less open, and its water holes may fill with mud.","This will be harmful to other species."]},{"id":"23-1","title":"23-1","sentences":["There is one important thing to note about momentum.","Since motion is relative, only relative velocities are relevant.","In fact, when you think about it, all velocities are relative.","Thus, on the surface of the earth, we always reckon velocity with respect to the ground — the velocity of the earth itself does not matter.","There is a true story of a French pilot in World War II who stretched his hand out of his small airplane window and caught a bullet.","How is this possible?","The velocity of the bullet must have been about the same as the velocity of his plane.","This can happen, because a bullet slows down to such a velocity toward the end of its flight path due to the action of air drag.","Since only relative velocity matters, the momentum of the bullet was negligible as far as the pilot was concerned.","Thus, he would have had little problem in catching the bullet."]},{"id":"24-1","title":"24-1","sentences":["Today’s cultural tourist is just as likely to be in search of ‘popular’, ‘everyday’ or ‘street’ culture as they are likely to visit a heritage site or a museum.","The museum seems to have lost its dominant role as a factory of meaning in (post)modern society, so cultural tourists have gone in search of meaning elsewhere.","The predominant direction of expansion has been into ‘everyday life’.","Cultural tourism is as much based on experiencing as it is on seeing; therefore, Raymond Williams’ definitions of culture as a whole way of life as well as the arts and learning are particularly relevant here.","Past definitions of cultural tourism have placed too much emphasis on cultural tourism as a form of arts or heritage tourism in its narrowest sense; for example, visiting museums, monuments, galleries and theatres.","Cultural tourists are also interested in the more experiential aspects of culture.","In an international context, particularly in the context of indigenous or ethnic tourism, the way of life of a people can be a central focus, where the traveller is motivated primarily by first-hand, authentic or intimate contact with people whose ethnic or cultural background is different from their own."]},{"id":"24-2","title":"24-2","sentences":["Although many U.S. Americans consider mathematics boring and tedious, all forms of standardized rankings involve figures and numbers.","When ranking quarterbacks, for instance, the NFL (National Football League) standardizes the ranking process by defining different numerical categories that cover all aspects of the position.","Each quarterback has certain numbers and figures, ranging from “percentage of pass completions” to “interceptions over touchdowns” to “number of yards passed per game.","The quarterback’s livelihood depends on those numbers.","To negotiate a raise, a quarterback has to improve his numbers, and when a quarterback is benched, it is often due to unsatisfactory numbers.","Similarly, at least 13 million Americans belong to virtual football leagues in which participants select players from different professional teams; at the end of the season, the participant whose virtual team has amassed the most points, defined by each virtual league differently, wins the jackpot.","Such leagues even have a draft at the beginning of the season."]},{"id":"25-1","title":"25-1","sentences":["Teaching reflects what society itself demands; it necessitates that disorder — of students and teachers alike, of mind, behavior, and environment — yield to its opposite.","Effective teaching requires that, failing their own self-imposed order, students experience the imposition of some outer order so that inner order may develop.","This means in practice, for instance, that the goals of classes and courses be clearly set, that they be explained and justified, that the manner of achieving them be clear, that the presentation of materials conducive to reaching them be appropriate, and that all activities be directed somehow to their attainment.","It means, too, that students take up their own obligation to maintain the conditions under which learning occurs: quiet in their classrooms, respect for and courtesy toward others, civility of language and behavior, and the like.","Above all, it implies structured industry — study and activity that are oriented toward a goal and pursued with perseverance and method.","That is, good teaching requires that teachers and students subject themselves to external and internal control so that learning can take place."]},{"id":"25-3","title":"25-3","sentences":["The experiences of learning to ride a bicycle or drive a car illustrate well how the “what” and “how” systems — those involved in object identification and practical action — might interact during development.","When we learn to drive a car, we go through a first stage where each required action and sequence of actions — such as looking in the mirror, signaling with the blinker, pressing the clutch prior to shifting into gear, and so forth — are explicitly thought of and double-checked while monitoring our situation in the environment.","Once learned and after a few hours of practice, the required actions for driving become second nature, transferable to almost any vehicle and performed without explicit thinking.","Information appears to be perceived directly; the affordances of the road, the car, and the traffic implicitly detected.","Actually, this sort of automatization of conscious learning can be jeopardized by the return of explicit awareness.","If you start to think too much about your driving, you actually increase your chances of having an accident.","People in sport competitions confirm that self-consciousness is one’s worst enemy: tennis, golf, or billiard players commonly report that they lose their “touch” by thinking too much about their moves."]},{"id":"26-1","title":"26-1","sentences":["In the context of a studio visit, the viewer might notice several clipped newspaper articles pinned to the wall, a wax-coated hotplate, walls with paint marks, resin-drizzled floors and several sculptures barely visible through their plastic wrap.","Such real-world clues offer the visitor a foothold onto the artist’s oeuvre.","The studio visitor imagines that the artist is currently a painter, who applies wax and resin and finds inspiration in particular articles.","Similarly, guests experiencing artworks in some homes notice art positioned next to furnishings, family photographs displayed on the piano and coffeetable books stacked to demonstrate preferences.","Together, these components affect particular experiences.","Within the artist’s studio or collector’s home, residue from studio activities or the collector’s personal belongings help to connect the artworks to the world.","By contrast, artworks displayed in exhibitions feel comparatively isolated, practically clipped from the world where they originated.","This could explain why aestheticians tend to treat artworks as singletons, rather than as members of some set."]},{"id":"26-3","title":"26-3","sentences":["Through stories we can explore the human condition and see how other people think.","This can affirm our own beliefs and perceptions, but it also challenges them.","Regardless of the language, there is something universal about what occurs in the brain at the point when we are processing narratives, triggering better self-awareness and empathy for others.","Psychologists scanned people listening to narratives in English, Farsi, and Mandarin, and found the same patterns of brain activation when people found meaning in the stories.","Other studies find that reading fiction significantly increases empathy toward others, including people of a different race or religion.","And the more absorbed in a story a reader is, the more empathetically they behave in real life.","For instance, if the researcher “accidentally” dropped his pens, those participants who had previously reported being “highly absorbed” in the story were about twice as likely to help pick up the pens.","Another study concluded that literary fiction “uniquely engages the psychological processes needed to gain access to characters’ subjective experiences.","That is to say, if you read novels, you can probably read emotions, vital skills for forming cooperative societies"]},{"id":"27-1","title":"27-1","sentences":["Over the past twenty years, with the arrival of digital politics, social and political protest movements have changed and become ever more prominent through what the sociologist Manuel Castells has called Networks of Outrage and Hope.","We now have a swirling world of ‘online activism’, digital rebellion, information politics and People’s Platforms.","Smartphones and social networking now provide a more fluid, leaderless, participatory activism that arises more spontaneously.","The early examples like the Occupy Movement (2011), the Arab Spring in Egypt (2010), the Umbrella Movement in Hong Kong (2014, 2019), the Gezi Park Movement in Turkey (2013), and the Pussy Riots in Russia (2011) galvanized large numbers of people and attracted world attention.","While some suggest that these new politics are enhancing democracy, others maintain that they do not really challenge the dominant power groups.","Looking back, most of them have proved unsuccessful, clamped down upon by the state.","There seems a limit to the power of new social movements."]},{"id":"27-2","title":"27-2","sentences":["The advent of automobiles drastically altered urban landscapes by enabling the growth of suburbs.","Cars provided individuals the ability to live farther from city centers, where land was cheaper and more abundant.","This expansion created the modern suburb, characterized by residential zones separate from commercial and industrial areas, promoting a shift from highdensity urban living to the spacious suburbs.","The flexibility cars offered meant people could commute daily, uniting work, leisure, and homelife in new ways.","In response, urban planning evolved, placing emphasis on roads and highways to accommodate increased travel.","This decentralization led to altered living patterns, encouraging families to seek homes in quieter, suburban environments while maintaining access to urban job markets.","The sprawling growth fueled demands for expanded infrastructure and services in these areas, bringing in new economic opportunities.","Cars were instrumental in shaping this living model by significantly detaching home locations from places of employment and recreation."]},{"id":"28-1","title":"28-1","sentences":["People like pictures of the savanna, even if they have never been there.","In one study, people of different ages (8, 11, 15, 18, 35, and over 70 years) looked at images of tropical forests, deciduous forests, coniferous forests, deserts, and the East African savanna.","Eight-year-old children said that they would like to live in or visit the savanna more than any other environment.","After the age of 15, people also liked deciduous and coniferous forests.","Since none of these people had visited savannas, the implication is that this preference was programmed into their brains.","This programmed preference is called “the savanna hypothesis.","As people get older, this preference gets modified by where they have lived.","Synek and Grammer, researchers in evolutionary psychology, confirmed these findings in a different study.","They showed that young children in Austria prefer landscapes thinly dotted with trees and with low mountains, scenes that resemble the savanna.","After puberty, their preferences shifted to areas with denser trees and higher mountains, again, presumably, because of more experience with these terrains."]},{"id":"28-2","title":"28-2","sentences":["Dreamers find it difficult to determine whether a memory is from a dream or some other source after time has passed, known as “source monitoring.","It is difficult to distinguish between memories of real dreams and made-up ones, imagination or stories someone else told us.","Dream source monitoring was found to be less accurate than other memory source monitoring.","A cognitive psychologist, Marcia K.","Johnson and her colleagues’ explanation is that “real dreams are deficient in information about cognitive operations that help identify the self-generations we create when we are awake.","Although dreams are usually more vivid than imagination, the cognitive operations that generate imagining are also remembered.","Remember that you intentionally thought of an image helps distinguish it from a perception that you did not intentionally generate.","Dream generation, in contrast, is “transparent” in that we don’t experience the generation process, making it more difficult to source monitor"]},{"id":"28-3","title":"28-3","sentences":["Much research in social psychology has documented some of the key strategies that people rely upon in defending the belief I am good.","For example, when people perform poorly at something, they tend to trivialize their failures.","This trivialization disarms those failures and prevents them from overwriting their life stories.","Imagine, say, that someone fails a calculus test.","A common defensive response is to conclude that this test was just not that important to them.","They may say to themselves, “Who cares about calculus anyway.","I’m not going to become a mathematician.","In contrast, people will typically show the precise opposite pattern for their successes and will interpret those events as being of outsize importance.","So if someone aces a calculus test, they may think to themselves about how crucial calculus is for their future career success and how it’s key to getting into graduate school or getting a highly desired job as an engineer or a financial analyst.","By titrating how importantly people view their successes and failures, they can shape their emotional reactions to these events in a way that enables them to tell a more convincing story that I am good."]},{"id":"29-1","title":"29-1","sentences":["Along with the mistaken notion that the law resides in the books goes the equally mistaken idea that law is secret, or at least inaccessible to the ordinary person.","To understand and apply the law at the advanced, technical level that lawyers do requires professional knowledge, but to understand the basic substance of the law does not.","Law reflects life.","The principles and issues embodied in the law are not different from those that we experience in other aspects of our lives.","Contract law, for example, is a commentary on the way people make, interpret, keep, and break their promises in commercial and noncommercial settings.","Few nonlawyers can describe the objective theory of contract formation or the Statute of Frauds, but they have thought a lot about contracts and promises.","If you cross your fingers when you make a promise, does it mean that the promise doesn’t count?","If your newly purchased television doesn’t work, can you return it to the store?","And so on."]},{"id":"29-2","title":"29-2","sentences":["The internet has transformed the fashion marketplace, making it increasingly difficult to predict the demand for the selling season .","Consumers can browse for product information and prices and gain comparative information almost instantaneously, making them more informed than ever before, transferring the balance of power from the retailer to the customer.","This is exacerbated by open and real-time access to fashion shows, facilitated through livestreaming, coupled with social media access to celebrity looks and lifestyles and the sharing of all aspects of life on social media.","Consumers use fashion choices to express their individual style and personality, especially those promoting ‘brand me’ on social media.","The traditional two-season offer is no longer seen as enough, with consumers demanding new products throughout the whole year.","This creates a problem for fashion retailers as many consumers are looking for more exclusive pieces to differentiate themselves, forcing up the desire for trend-led ever more rapidly changing styles, while still demanding affordable prices."]},{"id":"test1-3","title":"Test 1-3","sentences":["Employees who are not privacy “literate” represent a vulnerability for businesses.","They may compromise privacy and security measures and expose personal or confidential information without realizing it.","Employee online access rights can and should be limited to what each employee needs to perform his or her job.","However, while physical barriers, firewalls, passwords, and other security measures are useful, for most organizations access to large amounts of sensitive information by employees is necessary to do business.","The key to ensuring employee adherence to privacy and security measures is to educate them and to develop a practice of ongoing education and other opportunities for reinforcement of the role that all employees play in securing critical information privacy by adhering to proper privacy and security protocols.","Employees may have differing levels of access to information, but all should understand the importance of protecting private or confidential information and how their actions affect the security of this information.","The very nature of private or commercially confidential information means that it should not be made publicly available"]},{"id":"test1-5","title":"Test 1-5","sentences":["Handing over decision making to your children is a gradual process based on their age, maturity, and decision-making history.","It would be downright dangerous to give children complete latitude in their decision making.","You can, however, begin to teach decision making to very young children by setting reasonable limits to their decisions.","For example, if you took your children into a convenience store and told them they could have anything they wanted, they would be overwhelmed by the choices (which, research shows, either tend to prevent people from making decisions or result in poor decisions).","However, you can give them limited options to choose from, such as jawbreakers, licorice, and bubble gum (or, better yet, sesame sticks, fruit wraps, and yogurt peanuts), and they would then decide which treat they want.","Your children will learn to make decisions, but they won’t be inundated by the huge number of options available to them."]},{"id":"test1-6","title":"Test 1-6","sentences":["When we were investigating why Americans valued meat so much, we found widespread confusion among consumers about which foods are healthy and sustainable.","As part of the project, we asked consumers to sort different foods in any way they thought they should be grouped.","Participants ended up dividing foods into groups such as fruits, vegetables, and dairy.","However, most consumers didn’t know how to sort plant-based “milks” and meat alternatives.","Interestingly, they didn’t consider them as part of any typical food group.","In addition, most people still don’t understand (or trust) lab-grown or cultured meats.","The reaction to lab-grown meats will likely be similar to the often negative reactions to and suspicions of genetically modified foods when they first came on the market.","These gaps in literacy of emerging technologies hinder the successful implementation of products that could have environmental and health benefits."]},{"id":"test1-7","title":"Test 1-7","sentences":["In an experiment conducted by researchers at the University of California, Los Angeles, study subjects were required to give a series of unplanned speeches in front of an audience (a reliable way to trigger anxiety).","Half of the participants were then asked to engage in what the researchers call “affect labeling,” filling in responses to the prompt “I feel ,” while the other half were asked to complete a neutral shapematching task.","The affect-labeling group showed steep declines in heart rate and skin conductance compared to the control group, whose levels of physiological arousal remained high.","Brain-scanning studies offer further evidence of the calming effect of affect labeling: simply naming what is felt reduces activity in the amygdala, the brain structure involved in processing fear and other strong emotions.","Meanwhile, thinking in a more involved way about feelings and the experiences that evoked them actually produces greater activity in the amygdala."]},{"id":"test1-12","title":"Test 1-12","sentences":["Jean Baudrillard, one of the best-known French social theorists, believes that the world of culture today is based on simulation, not reality.","According to Baudrillard, social life is much more a spectacle that simulates reality than reality itself.","People often gain “reality” from the media, where reality is not always as it might appear.","Many U.S. children, upon entering school for the first time, have already watched more hours of television than the total number of hours of classroom instruction they will encounter in their entire school careers.Add to this the number of hours that some will have spent playing computer games or surfing the Internet.","Baudrillard refers to this social creation as hyperreality — a situation which the simulation of reality is more real than the thing itself.","For Baudrillard, everyday life has been captured by the signs and symbols generated to represent it, and we ultimately relate to simulations and models as if they were reality"]},{"id":"test1-13","title":"Test 1-13","sentences":["Things become complicated when we consider a task that involves multiple processes differing in automaticity.","In a psychological task, people are required to name aloud the color of words while ignoring the words themselves.","Sometimes, the words are compatible with the color with which they are printed (e.g., “red” printed with red ink).","In other conditions, the words are incompatible with their color (e.g., “red” printed in blue).","People usually complete this task more slowly in incompatible than compatible conditions.","On incompatible trials, people do not intend to respond to the meaning of the word (the task is to name the ink color, not the word), but they typically become aware that it is easier said than done.","They realize their attention is being drawn to the content of the words, despite its irrelevance to the task at hand and their intention to ignore it.","To overcome this automatic draw on attention, people must assert control to report a judgment that has been made challenging by a competing automatic process.","So, in this case, people are aware of an automatic process, but they cannot stop it and have difficulty correcting its influence."]},{"id":"test1-15","title":"Test 1-15","sentences":["The issue of cultural variation in emotions has been controversial.","At first, it was widely believed that different cultures produced radically different emotional states, so that a person from one culture could not even begin to understand what someone from another culture was feeling.","This view received a severe blow from evidence that people from very different cultures could translate emotion words effectively and even recognize facial expressions of emotion.","A highly influential research program by Paul Ekman and his associates began with photographs of facial expressions that Americans would easily recognize as expressing different basic emotions: angry, sad, happy, and the like.","Ekman and his group traveled all over the world showing the photographs to people in widely different cultures, including even some distant tribes that had had almost no contact with Western civilization.","By and large, most people in every culture recognized the emotions expressed in those American faces.","These results convinced most doubters that some aspects of emotions are innate and universal."]},{"id":"test1-17","title":"Test 1-17","sentences":["Accustomed to bargains and overwhelmed with options, consumers must have a reason to buy now.","In addition to the actual product they’re buying, consumers expect something more, an incentive that will give them an extra emotional charge.","Customization, an event, multiple uses for the product, entertaining pop-up stores, or a great story (such as a special product heritage or theme) are more examples of plus-one incentives that result in purchases.","“Do-good” products such as those that tout being environmentally conscious or supporting communities offer not just one but three plus-one purchasing incentives: a compelling and human story, rationalization, and an emotional boost for the consumer who feels altruistic while spending.","For example, consumers who purchase Tom’s Shoes or Walgreen’s flu shots are told that their purchase will result in a pair of shoes or a flu shot being donated to someone in need through each company’s one-to-one matching program.","Thus, in addition to their purchase, consumers also get to see themselves in a more positive light; they feel less wary about these businesses, which have been humanized through a compelling story of need; and they have the rationalization of giving rather than spending"]},{"id":"test1-19","title":"Test 1-19","sentences":["There’s a difference between a story and a plot.","They may seem to be the same thing (a narrative account of some action with a beginning, middle, and end), but they aren’t.","A story, as opposed to a plot, is the straightforward account of everything that happens in the order that it happens.","A plot is the way events are selected and arranged with an emphasis not only on what happened but on why it happened.","In other words, plots involve cause and effect, not just one event following another.","The English novelist E. M. Forster illustrated the difference between story and plot by this example.","Here’s a story: The king died and then the queen died.","This is a succession of events, simply organized temporally: this happened and then this happened.","Here’s a plot: The king died and then the queen died of grief.","Events are now connected by cause and effect: the death of the king led to the death of the queen from grief.","For Forster, a story asks “And then?” (X happens and then Y happens).","A plot asks “Why?”"]},{"id":"test1-20","title":"Test 1-20","sentences":["Married couples are highly motivated to empathize with one another; to do this, they mimic each other’s facial expressions, which in turn facilitates similar emotional experiences.","People who are on the same page get along better and are more likely to stay happily married.","Over time, research confirms, this mimicry leads to permanent changes in how the face is shaped.","In one study, more than a hundred volunteers were shown photographs of men and women taken in their first year of marriage and taken twenty-five years later, on the spouses’ silver wedding anniversary.","They were also shown photos of randomly matched pairs at the same ages.","The volunteers were asked to judge the physical similarity of the couples.","Sure enough, there was an increase in similarity among the married couples at the twenty-five-year mark, but not the randomly matched pairs.","Most striking, the more similar people looked, the happier they reported they were in their union.","So next time you are struggling to connect with your spouse, try to subtly mimic his or her facial expression; it is likely to make you feel in sync and strengthen that emotional link that can weaken in times of strife."]},{"id":"test1-22","title":"Test 1-22","sentences":["Information technology can play an important role in both bringing communities together and splitting them apart.","On the one hand, IT has the potential to increase shared information and norms across larger groups.","For instance, in the 1960s, most Americans got their news from one of three national television networks and a small number of other publications.","If Walter Cronkite, a famous American broadcast journalist, said it, many Americans believed it was true.","That almost certainly helped spread more shared norms across a country that previously had strong regional differences.","But in the 2016 presidential election, many Americans got their news from social networking sites and other online media that created highly tailored news feeds for each individual.","If you had liberal friends and interests, you were rarely exposed to conservative news outlets, and vice versa.","In a community where each subgroup saw a different set of facts about the world and had a different value system for interpreting those facts, the shared norms needed for the overall community to function effectively were greatly weakened.","In a sense, the United States seemed to be fragmenting into two separate communities."]},{"id":"test2-3","title":"Test 2-3","sentences":["Society makes a pedagogical mistake when it emphasizes obtaining the so-called “right answer” rather than asking the “right” question, or at least, a good question.","The so-called “good student” is viewed as the one who rapidly provides the right answers to questions teachers ask.","On this view, the expert in a given field unfortunately becomes an extension of the so-called “expert student” — the one who knows and can quickly spit back a lot of information.","As John Dewey believed, how one thinks about issues often is more important and consequential in life than exactly what one thinks.","Schools should teach students how to ask important questions (questions that are worth answering and that are interesting) and reduce their emphasis on rote learning of facts.","And they need to reorient their emphases in diverse domains, not just in the arts.","Contemporary creativity research embraces a wide variety of distinct domains, from science to engineering to business to architectural design to the arts to athletics, all of which are ready for creative investigation"]}];
+  var LSKEY = "sentenceOrder.progress.v1";
+
+  var current=null, order=[], streak=0, checked=false, autoT=null;
+  var done = loadProgress();
+
+  function $(s){return document.querySelector(s);}
+
+  /* ---- progress storage (localStorage with safe fallback) ---- */
+  function loadProgress(){
+    try{
+      var raw=window.localStorage.getItem(LSKEY);
+      if(raw){var o=JSON.parse(raw);if(o&&typeof o==="object")return o;}
+    }catch(e){}
+    return {};
+  }
+  function saveProgress(){
+    try{window.localStorage.setItem(LSKEY, JSON.stringify(done));}catch(e){}
+  }
+
+  var toastEl=$("#toast"), toastT=null;
+  function toast(msg){
+    toastEl.textContent=msg;toastEl.classList.add("show");
+    clearTimeout(toastT);toastT=setTimeout(function(){toastEl.classList.remove("show");},1800);
+  }
+
+  function shuffleIdx(n){
+    if(n<=1) return [0];
+    var base=[];for(var i=0;i<n;i++)base.push(i);
+    var a;
+    do{
+      a=base.slice();
+      for(var k=a.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=a[k];a[k]=a[j];a[j]=t;}
+    }while(a.every(function(v,i){return v===i;}));
+    return a;
+  }
+
+  function byId(id){for(var i=0;i<PASSAGES.length;i++)if(PASSAGES[i].id===id)return PASSAGES[i];return null;}
+  function doneCount(){var c=0;for(var i=0;i<PASSAGES.length;i++)if(done[PASSAGES[i].id])c++;return c;}
+
+  /* ---- build selector + grid ---- */
+  var sel=$("#psel");
+  PASSAGES.forEach(function(p){
+    var o=document.createElement("option");o.value=p.id;o.textContent=p.title;sel.appendChild(o);
+  });
+  $("#total-n").textContent=PASSAGES.length;
+
+  var grid=$("#grid");
+  PASSAGES.forEach(function(p){
+    var c=document.createElement("button");
+    c.className="cell";c.dataset.id=p.id;c.textContent=p.title;
+    c.title=p.title+(done[p.id]?" · 완료":" · 미완료");
+    c.addEventListener("click",function(){current=p;sel.value=p.id;loadRound();scrollToBoard();});
+    grid.appendChild(c);
+  });
+
+  function scrollToBoard(){
+    var b=$(".board");if(b&&b.scrollIntoView)b.scrollIntoView({behavior:"smooth",block:"center"});
+  }
+
+  function refreshProgressUI(){
+    var n=doneCount(), total=PASSAGES.length, pct=Math.round(n/total*100);
+    $("#done-n").textContent=n;
+    $("#pct").textContent=pct+"%";
+    $("#bar").style.width=pct+"%";
+    var cells=grid.children;
+    for(var i=0;i<cells.length;i++){
+      var id=cells[i].dataset.id;
+      cells[i].classList.toggle("done", !!done[id]);
+      cells[i].classList.toggle("active", current && id===current.id);
+      cells[i].title=byId(id).title+(done[id]?" · 완료":" · 미완료");
+    }
+    $("#done-tag").style.display = (current && done[current.id]) ? "" : "none";
+  }
+
+  sel.addEventListener("change",function(){current=byId(sel.value);loadRound();});
+  $("#check").addEventListener("click",check);
+  $("#shuffle").addEventListener("click",function(){loadRound();});
+  $("#next").addEventListener("click",nextUndone);
+  $("#reset").addEventListener("click",function(){
+    if(confirm("모든 진도를 초기화할까요? 완료 표시가 전부 지워집니다.")){
+      done={};saveProgress();refreshProgressUI();toast("진도를 초기화했습니다");
+    }
+  });
+
+  function nextUndone(){
+    clearTimeout(autoT);
+    var undone=PASSAGES.filter(function(p){return !done[p.id] && p.id!==(current&&current.id);});
+    var pool = undone.length ? undone : PASSAGES.filter(function(p){return p.id!==(current&&current.id);});
+    if(pool.length===0)pool=PASSAGES;
+    current=pool[Math.floor(Math.random()*pool.length)];
+    sel.value=current.id;
+    loadRound();
+  }
+
+  function loadRound(){
+    clearTimeout(autoT);
+    checked=false;
+    order=shuffleIdx(current.sentences.length);
+    $("#pmeta").innerHTML='<b>'+current.sentences.length+'</b> 문장';
+    var v=$("#verdict");v.className="verdict";v.textContent="";
+    $("#check").disabled=false;
+    drawSlots();
+    refreshProgressUI();
+  }
+
+  function drawSlots(){
+    var ol=$("#slots");ol.innerHTML="";
+    order.forEach(function(sIdx,pos){
+      var li=document.createElement("li");
+      li.className="slot";li.draggable=true;li.dataset.pos=pos;
+      var num=document.createElement("span");num.className="num";
+      var txt=document.createElement("span");txt.className="txt";txt.textContent=current.sentences[sIdx];
+      var grip=document.createElement("span");grip.className="grip";grip.textContent="⠿";
+      li.appendChild(num);li.appendChild(txt);li.appendChild(grip);
+      attachDnD(li);
+      ol.appendChild(li);
+    });
+  }
+
+  var dragEl=null;
+  function attachDnD(li){
+    li.addEventListener("dragstart",function(e){dragEl=li;li.classList.add("dragging");e.dataTransfer.effectAllowed="move";});
+    li.addEventListener("dragend",function(){li.classList.remove("dragging");clearOver();commitOrder();});
+    li.addEventListener("dragover",function(e){
+      e.preventDefault();var ol=$("#slots");var after=afterEl(ol,e.clientY);clearOver();
+      if(!dragEl)return;if(after==null)ol.appendChild(dragEl);else ol.insertBefore(dragEl,after);
+    });
+    li.addEventListener("touchstart",function(){dragEl=li;li.classList.add("dragging");},{passive:true});
+    li.addEventListener("touchmove",function(e){
+      e.preventDefault();var y=e.touches[0].clientY;var ol=$("#slots");var after=afterEl(ol,y);
+      if(!dragEl)return;if(after==null)ol.appendChild(dragEl);else if(after!==dragEl)ol.insertBefore(dragEl,after);
+    },{passive:false});
+    li.addEventListener("touchend",function(){li.classList.remove("dragging");commitOrder();},{passive:true});
+  }
+  function clearOver(){var e=document.querySelectorAll(".slot.over");for(var i=0;i<e.length;i++)e[i].classList.remove("over");}
+  function afterEl(container,y){
+    var els=[].slice.call(container.querySelectorAll(".slot:not(.dragging)"));
+    var closest={offset:-Infinity,element:null};
+    els.forEach(function(child){
+      var box=child.getBoundingClientRect();var offset=y-box.top-box.height/2;
+      if(offset<0&&offset>closest.offset)closest={offset:offset,element:child};
+    });
+    return closest.element;
+  }
+  function commitOrder(){
+    var kids=[].slice.call($("#slots").children);
+    var newOrder=kids.map(function(li){return order[+li.dataset.pos];});
+    order=newOrder;
+    kids.forEach(function(li,i){li.dataset.pos=i;li.classList.remove("correct","wrong");});
+    if(checked){checked=false;var v=$("#verdict");v.className="verdict";v.textContent="";$("#check").disabled=false;}
+  }
+
+  function check(){
+    checked=true;
+    var allRight=true;
+    var kids=[].slice.call($("#slots").children);
+    kids.forEach(function(li,pos){
+      var sIdx=order[pos];
+      if(sIdx===pos){li.classList.add("correct");li.classList.remove("wrong");}
+      else{li.classList.add("wrong");li.classList.remove("correct");allRight=false;}
+    });
+    var v=$("#verdict");
+    if(allRight){
+      v.textContent="Perfect order.";v.className="verdict show good";
+      streak++;$("#streak").textContent=streak;
+      $("#check").disabled=true;
+      var firstTime = !done[current.id];
+      if(firstTime){done[current.id]=true;saveProgress();}
+      refreshProgressUI();
+      if(firstTime)toast("완료! 진도에 기록됨 ✓");
+      var allDone = doneCount()===PASSAGES.length;
+      autoT=setTimeout(function(){
+        if(allDone){toast("모든 지문 완료! 🎉 복습은 그리드에서 선택하세요");}
+        else nextUndone();
+      },1900);
+    }else{
+      v.textContent="Not quite — keep going.";v.className="verdict show bad";
+      streak=0;$("#streak").textContent=streak;
+    }
+  }
+
+  /* ---- start: first undone passage, else random ---- */
+  var firstUndone=PASSAGES.filter(function(p){return !done[p.id];});
+  current = firstUndone.length ? firstUndone[0] : PASSAGES[Math.floor(Math.random()*PASSAGES.length)];
+  sel.value=current.id;
+  loadRound();
+})();
+</script>
+</body>
+</html>
